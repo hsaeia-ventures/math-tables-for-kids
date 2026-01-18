@@ -1,3 +1,23 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&display=swap');
+
+@theme {
+  --color-primary: #0f172a;
+  --color-accent: #facc15;
+  --color-success: #22c55e;
+  --color-error: #ef4444;
+  
+  --font-sans: 'Fredoka', ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-primary text-white font-sans antialiased min-h-screen overflow-x-hidden;
+  }
+}
+
+.juicy-button {
+  @apply transition-transform active:scale-95 hover:brightness-110 rounded-2xl;
+}

@@ -67,7 +67,7 @@ import { StarBackgroundComponent } from '../../shared/components/star-background
         }
       </div>
     </div>
-  ``,
+  `,
   styleUrl: './dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

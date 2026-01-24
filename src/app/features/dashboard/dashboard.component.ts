@@ -67,21 +67,8 @@ import { StarBackgroundComponent } from '../../shared/components/star-background
         }
       </div>
     </div>
-  `,
-  styles: `
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
-    .animate-float {
-      animation: float infinite ease-in-out 4s;
-    }
-    @for $i from 1 through 10 {
-      .animate-float-#{$i} {
-        animation-delay: #{$i * 0.2}s;
-      }
-    }
-  `,
+  ``,
+  styleUrl: './dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent {

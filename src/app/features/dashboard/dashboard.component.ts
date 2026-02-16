@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { LucideAngularModule, Lock, Star, LogOut } from 'lucide-angular';
 import { StorageService } from '../../core/services/storage.service';
+import { AuthService } from '../../core/services/auth.service';
 import { SoundService } from '../../core/services/sound.service';
 import { StarBackgroundComponent } from '../../shared/components/star-background.component';
 
@@ -73,6 +74,7 @@ import { StarBackgroundComponent } from '../../shared/components/star-background
 })
 export class DashboardComponent {
   private storage = inject(StorageService);
+  private auth = inject(AuthService);
   private sound = inject(SoundService);
   private router = inject(Router);
 
@@ -120,9 +122,9 @@ export class DashboardComponent {
     this.router.navigate(['/exercise', tableId]);
   }
 
-  logout(): void {
+  async logout(): Promise<void> {
     this.sound.play('click');
-    this.storage.logout();
+    await this.auth.logout();
     this.router.navigate(['/login']);
   }
 }

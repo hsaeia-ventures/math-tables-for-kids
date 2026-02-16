@@ -1,63 +1,50 @@
-import { Injectable, signal } from '@angular/core';
-import { Observable, of, delay, tap } from 'rxjs';
-import { Profile, UserSession, TableProgress } from '../models';
+import { Injectable, signal, inject, effect } from '@angular/core';
+import { Observable, of, delay } from 'rxjs';
+import { Profile, TableProgress } from '../models';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class StorageService {
   private readonly USERS_KEY = 'astromath_users';
-  private readonly SESSION_KEY = 'astromath_session';
 
-  currentUser = signal<UserSession | null>(this.getInitialSession());
+  private auth = inject(AuthService);
+
   profiles = signal<Profile[]>([]);
   activeProfile = signal<Profile | null>(null);
 
   constructor() {
-    this.loadProfiles();
+    // Automatically react to auth changes
+    effect(() => {
+      const user = this.auth.currentUser();
+      if (user) {
+        this.loadProfiles(user.email || user.uid);
+      } else {
+        this.clearData();
+      }
+    });
   }
 
-  private getInitialSession(): UserSession | null {
-    const session = localStorage.getItem(this.SESSION_KEY);
-    return session ? JSON.parse(session) : null;
-  }
-
-  login(email: string): Observable<UserSession> {
-    const session: UserSession = { email };
-    return of(session).pipe(
-      delay(300),
-      tap((s) => {
-        localStorage.setItem(this.SESSION_KEY, JSON.stringify(s));
-        this.currentUser.set(s);
-        this.loadProfiles();
-      })
-    );
-  }
-
-  logout(): void {
-    localStorage.removeItem(this.SESSION_KEY);
-    this.currentUser.set(null);
-    this.activeProfile.set(null);
+  private clearData(): void {
     this.profiles.set([]);
+    this.activeProfile.set(null);
   }
 
-  private loadProfiles(): void {
-    const user = this.currentUser();
-    if (!user) return;
-
+  private loadProfiles(userKey: string): void {
     const allUsersData = JSON.parse(localStorage.getItem(this.USERS_KEY) || '{}');
-    const userProfiles = allUsersData[user.email] || [];
+    const userProfiles = allUsersData[userKey] || [];
     this.profiles.set(userProfiles);
 
-    if (user.currentProfileId) {
-      const active = userProfiles.find((p: Profile) => p.id === user.currentProfileId);
-      this.activeProfile.set(active || null);
-    }
+    // If there was an active profile pre-selected (optional logic for future)
+    // For now we just reset it and let user select
+    this.activeProfile.set(null);
   }
 
   createProfile(name: string, age: number, avatar: string): Observable<Profile> {
-    const user = this.currentUser();
+    const user = this.auth.currentUser();
     if (!user) throw new Error('No user logged in');
+    const userKey = user.email || user.uid;
 
     const newProfile: Profile = {
       id: crypto.randomUUID(),
@@ -74,50 +61,47 @@ export class StorageService {
     };
 
     const allUsersData = JSON.parse(localStorage.getItem(this.USERS_KEY) || '{}');
-    const userProfiles = allUsersData[user.email] || [];
+    const userProfiles = allUsersData[userKey] || [];
     userProfiles.push(newProfile);
-    allUsersData[user.email] = userProfiles;
+    allUsersData[userKey] = userProfiles;
     localStorage.setItem(this.USERS_KEY, JSON.stringify(allUsersData));
 
-    this.profiles.set(userProfiles);
+    this.profiles.set([...userProfiles]);
     return of(newProfile).pipe(delay(300));
   }
 
   selectProfile(profileId: string): void {
-    const user = this.currentUser();
-    if (!user) return;
-
-    user.currentProfileId = profileId;
-    localStorage.setItem(this.SESSION_KEY, JSON.stringify(user));
-    this.currentUser.set({ ...user });
-
     const active = this.profiles().find((p) => p.id === profileId);
     this.activeProfile.set(active || null);
   }
 
   updateProgress(tableId: number, type: 'basic' | 'advanced', stars: number): Observable<void> {
-    const user = this.currentUser();
+    const user = this.auth.currentUser();
     const profile = this.activeProfile();
     if (!user || !profile) return of(undefined);
+    const userKey = user.email || user.uid;
 
     const updatedProfile = { ...profile };
+    // Deep copy progress to avoid direct mutation issues
+    updatedProfile.progress = profile.progress.map(p => ({ ...p }));
+
     const progressIndex = updatedProfile.progress.findIndex((p) => p.tableId === tableId);
-    
+
     if (progressIndex > -1) {
       const p = updatedProfile.progress[progressIndex];
       if (type === 'basic') p.basicCompleted = true;
       if (type === 'advanced') p.advancedCompleted = true;
-      
+
       const starDiff = Math.max(0, stars - p.stars);
       p.stars = Math.max(p.stars, stars);
       updatedProfile.totalStars += starDiff;
     }
 
     const allUsersData = JSON.parse(localStorage.getItem(this.USERS_KEY) || '{}');
-    const userProfiles: Profile[] = allUsersData[user.email];
+    const userProfiles: Profile[] = allUsersData[userKey];
     const profileIndex = userProfiles.findIndex((p) => p.id === profile.id);
     userProfiles[profileIndex] = updatedProfile;
-    allUsersData[user.email] = userProfiles;
+    allUsersData[userKey] = userProfiles;
     localStorage.setItem(this.USERS_KEY, JSON.stringify(allUsersData));
 
     this.activeProfile.set(updatedProfile);

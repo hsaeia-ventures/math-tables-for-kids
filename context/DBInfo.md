@@ -1,186 +1,113 @@
-# 📐 Modelo Entidad-Relación — AstroMath (Supabase)
+# 📐 Modelo de Datos — AstroMath (Firebase Firestore)
 
-Documento que describe el esquema de base de datos para la aplicación **AstroMath**, diseñado para ser implementado en **Supabase** (PostgreSQL).
+Documento que describe el esquema de base de datos NoSQL para la aplicación **AstroMath**, diseñado para ser implementado en **Google Cloud Firestore**.
 
 ---
 
-## Diagrama de Entidades
+## Estructura de Colecciones (NoSQL)
 
-```
-┌──────────────────────────────────┐
-│          auth.users              │  ← Tabla gestionada por Supabase Auth
-│  (no la creamos nosotros)        │
-├──────────────────────────────────┤
-│  id         : uuid  [PK]        │
-│  email      : text               │
-│  created_at : timestamptz        │
-└──────────┬───────────────────────┘
-           │
-           │  1 usuario tiene N perfiles
-           │  (ej: papá crea perfil para cada hijo)
-           ▼
-┌──────────────────────────────────┐
-│           profiles               │
-├──────────────────────────────────┤
-│  id          : uuid  [PK]       │
-│  user_id     : uuid  [FK → auth.users.id]  NOT NULL
-│  name        : text  NOT NULL    │
-│  age         : smallint  NOT NULL│
-│  avatar      : text  NOT NULL    │
-│  total_stars : integer DEFAULT 0 │
-│  created_at  : timestamptz       │
-│  updated_at  : timestamptz       │
-└──────────┬───────────────────────┘
-           │
-           │  1 perfil tiene N registros de progreso
-           │  (exactamente 10: uno por tabla de multiplicar)
-           ▼
-┌──────────────────────────────────┐
-│        table_progress            │
-├──────────────────────────────────┤
-│  id                 : uuid [PK]  │
-│  profile_id         : uuid [FK → profiles.id]  NOT NULL
-│  table_id           : smallint NOT NULL  (1-10)
-│  basic_completed    : boolean DEFAULT false
-│  advanced_completed : boolean DEFAULT false
-│  stars              : smallint DEFAULT 0  (0-3)
-│  best_score         : smallint DEFAULT 0  (0-10)
-│  attempts           : integer DEFAULT 0
-│  last_played_at     : timestamptz
-│  created_at         : timestamptz
-│                                  │
-│  UNIQUE(profile_id, table_id)    │  ← Un perfil solo tiene un registro por tabla
-└──────────────────────────────────┘
+Firestore es una base de datos orientada a documentos. No hay "tablas" ni "registros" (filas), sino **Colecciones** y **Documentos**.
+
+```text
+users/                        (Colección Raíz)
+│
+├── {userId}/                 (Documento: ID del padre/tutor)
+│   │                         (Coincide con Auth UID)
+│   │
+│   ├── profiles/             (Subcolección)
+│   │   │
+│   │   ├── {profileId}/      (Documento: Perfil de un niño)
+│   │   │   │
+│   │   │   ├── name: "Lucía"
+│   │   │   ├── age: 7
+│   │   │   ├── avatar: "🚀"
+│   │   │   └── ...
+│   │   │
+│   │   │   └── table_progress/   (Subcolección: Progreso)
+│   │   │       │
+│   │   │       ├── 1/            (Documento: Tabla del 1)
+│   │   │       │   ├── stars: 3
+│   │   │       │   └── ...
+│   │   │       │
+│   │   │       ├── ...
+│   │   │       │
+│   │   │       └── 10/           (Documento: Tabla del 10)
 ```
 
 ---
 
-## 🔑 Relaciones
+## 📋 Detalle de Documentos
 
-| Relación | Tipo | Descripción |
-|---|---|---|
-| `auth.users` → `profiles` | **1:N** | Un usuario autenticado (padre/profesor) puede crear múltiples perfiles (hijos/alumnos). |
-| `profiles` → `table_progress` | **1:N** | Cada perfil tiene exactamente **10 filas** de progreso (una por tabla del 1 al 10). |
+### 1. `users/{userId}/profiles/{profileId}`
 
----
-
-## 📋 Detalle de Campos
-
-### `profiles`
+Representa el perfil de un estudiante (hijo/alumno).
 
 | Campo | Tipo | Descripción |
 |---|---|---|
-| `id` | `uuid` | Identificador único del perfil (generado con `gen_random_uuid()`). |
-| `user_id` | `uuid` | Referencia al usuario autenticado que lo creó. Permite filtrar con RLS. |
-| `name` | `text` | Nombre del "comandante" (ej: "Lucía"). |
-| `age` | `smallint` | Edad del niño/a (4-14). |
-| `avatar` | `text` | Emoji del avatar seleccionado (🚀, 👨‍🚀, 👽, 🤖, 🌟). |
-| `total_stars` | `integer` | Suma total de estrellas acumuladas (campo calculable, pero se mantiene para consultas rápidas en el dashboard). |
-| `created_at` | `timestamptz` | Fecha de creación. |
-| `updated_at` | `timestamptz` | Última actualización. |
+| `name` | `string` | Nombre del "comandante" (ej: "Mario"). |
+| `age` | `number` | Edad (4-14). |
+| `avatar` | `string` | Emoji del avatar (ej: "👨‍🚀"). |
+| `total_stars` | `number` | Suma total de estrellas (cache para UI rápida). |
+| `created_at` | `timestamp` | Fecha de creación. |
 
-### `table_progress`
+### 2. `.../profiles/{profileId}/table_progress/{tableId}`
+
+Almacena el progreso de una tabla específica.
+**ID del Documento:** El ID es el número de la tabla (ej: `"1"`, `"2"`, `"10"`). Esto facilita el acceso directo (`doc(db, '...', '5')`).
 
 | Campo | Tipo | Descripción |
 |---|---|---|
-| `id` | `uuid` | Identificador único. |
-| `profile_id` | `uuid` | FK al perfil. Con `ON DELETE CASCADE`. |
-| `table_id` | `smallint` | Tabla de multiplicar (1-10). |
-| `basic_completed` | `boolean` | ¿Se completó el modo básico? |
-| `advanced_completed` | `boolean` | ¿Se completó el modo avanzado? (solo se desbloquea si `basic_completed = true`). |
-| `stars` | `smallint` | Mejor puntuación en estrellas (0-3). |
-| `best_score` | `smallint` | Mejor número de respuestas correctas (0-10). Útil para estadísticas futuras. |
-| `attempts` | `integer` | Número total de intentos en esta tabla. Útil para analytics. |
-| `last_played_at` | `timestamptz` | Última vez que se jugó esta tabla. |
-| `created_at` | `timestamptz` | Fecha de creación del registro. |
-
-> 💡 Los campos `best_score`, `attempts` y `last_played_at` son **nuevos** respecto al modelo TypeScript actual. No cambian ningún flujo existente, pero aportan datos valiosos para futuras funcionalidades (ej: estadísticas para padres, recomendaciones de repaso).
+| `basic_completed` | `boolean` | ¿Completó el modo básico? |
+| `advanced_completed` | `boolean` | ¿Completó el modo avanzado? |
+| `stars` | `number` | Mejor puntuación en estrellas (0-3). |
+| `best_score` | `number` | Récord de respuestas correctas (0-10). |
+| `attempts` | `number` | Total de veces jugadas. |
+| `last_played_at` | `timestamp` | Fecha de última partida. |
 
 ---
 
-## 🔒 Políticas RLS (Row Level Security)
+## 🔒 Reglas de Seguridad (Security Rules)
 
-### `profiles`
+Estas reglas reemplazan a las RLS de SQL. Garantizan que un usuario solo pueda leer/escribir datos que le pertenecen (donde `request.auth.uid == userId`).
 
-```sql
--- SELECT: Un usuario solo puede ver sus propios perfiles
-CREATE POLICY "Users can view own profiles"
-  ON profiles FOR SELECT
-  USING (user_id = auth.uid());
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Función auxiliar para verificar propiedad
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
 
--- INSERT: Un usuario solo puede crear perfiles vinculados a su cuenta
-CREATE POLICY "Users can create own profiles"
-  ON profiles FOR INSERT
-  WITH CHECK (user_id = auth.uid());
-
--- UPDATE: Un usuario solo puede actualizar sus propios perfiles
-CREATE POLICY "Users can update own profiles"
-  ON profiles FOR UPDATE
-  USING (user_id = auth.uid());
-
--- DELETE: Un usuario solo puede eliminar sus propios perfiles
-CREATE POLICY "Users can delete own profiles"
-  ON profiles FOR DELETE
-  USING (user_id = auth.uid());
-```
-
-### `table_progress`
-
-```sql
--- SELECT: Solo se puede ver el progreso de perfiles propios
-CREATE POLICY "Users can view own progress"
-  ON table_progress FOR SELECT
-  USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
-
--- INSERT: Solo se puede insertar progreso en perfiles propios
-CREATE POLICY "Users can insert own progress"
-  ON table_progress FOR INSERT
-  WITH CHECK (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
-
--- UPDATE: Solo se puede actualizar progreso de perfiles propios
-CREATE POLICY "Users can update own progress"
-  ON table_progress FOR UPDATE
-  USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
-
--- DELETE: Solo se puede eliminar progreso de perfiles propios
-CREATE POLICY "Users can delete own progress"
-  ON table_progress FOR DELETE
-  USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
+    // Regla para la colección de usuarios
+    match /users/{userId} {
+      // El usuario puede leer/escribir su propio documento raíz (si existiera datos ahí)
+      allow read, write: if isOwner(userId);
+      
+      // Regla recursiva para subcolecciones (profiles y table_progress)
+      match /profiles/{profileId} {
+        allow read, write: if isOwner(userId);
+        
+        match /table_progress/{tableId} {
+           allow read, write: if isOwner(userId);
+        }
+      }
+    }
+  }
+}
 ```
 
 ---
 
-## 🔄 Mapeo con el Código Angular Actual
+## 🔄 Inicialización de Datos
 
-| Modelo TypeScript actual | → Tabla Supabase |
-|---|---|
-| `UserSession.email` | `auth.users` (gestionado por Supabase Auth) |
-| `Profile.id, name, age, avatar, totalStars` | `profiles` |
-| `Profile.progress[]` (array embebido) | `table_progress` (tabla separada, JOIN) |
-| `TableProgress.tableId, basicCompleted, advancedCompleted, stars` | `table_progress` |
+A diferencia de SQL, Firestore no tiene "Triggers" nativos síncronos (existen Cloud Functions, pero son asíncronas).
 
-> **Cambio clave:** `progress` pasa de ser un **array anidado dentro de Profile** a ser una **tabla separada con FK**, lo cual es la normalización correcta para una base de datos relacional.
+**Estrategia:** La inicialización de las 10 tablas se hará **desde el Frontend (Angular)** inmediatamente después de crear el perfil.
 
----
+1. El usuario crea un perfil -> `addDoc(profilesRef, data)`.
+2. El servicio espera el ID del nuevo perfil.
+3. El servicio ejecuta un `batch` (lote) de escritura para crear los 10 documentos en `table_progress` con valores por defecto.
 
-## ⚙️ Trigger: Inicialización Automática de Progreso
-
-Al crear un nuevo perfil, se deben generar automáticamente las **10 filas de `table_progress`** (una por cada tabla de multiplicar del 1 al 10). Esto se logra con un trigger de PostgreSQL:
-
-```sql
-CREATE OR REPLACE FUNCTION initialize_table_progress()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO table_progress (profile_id, table_id)
-  SELECT NEW.id, generate_series(1, 10);
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER on_profile_created
-  AFTER INSERT ON profiles
-  FOR EACH ROW
-  EXECUTE FUNCTION initialize_table_progress();
-```
-
-Esto garantiza que el progreso siempre esté listo sin necesidad de lógica adicional en el frontend.
+Esto simplifica la arquitectura al no requerir despliegue de Cloud Functions backend para lógica simple.

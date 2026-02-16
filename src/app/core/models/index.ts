@@ -14,9 +14,11 @@ export interface TableProgress {
   stars: number;
 }
 
-export interface UserSession {
-  email: string;
-  currentProfileId?: string;
+export interface TableProgress {
+  tableId: number;
+  basicCompleted: boolean;
+  advancedCompleted: boolean;
+  stars: number;
 }
 
 export interface GameQuestion {

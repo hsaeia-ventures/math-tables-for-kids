@@ -2,7 +2,7 @@ Act as a Senior Angular Frontend Engineer specializing in EdTech applications fo
 
 **GOAL:** Build "AstroMath", a playful, responsive web app to teach multiplication tables (1-10) to kids.
 **THEME:** "Cartoon Space". Cute planets, bright colors, rounded UI, "juicy" interactions.
-**DATA:** Use LocalStorage to simulate a backend. No real API calls.
+**DATA:** Use **Supabase** as the Backend-as-a-Service (BaaS) for persistent data (Auth & DB). No longer using LocalStorage mocks for core data.
 
 ### TECH STACK REQUIREMENTS
 - **Framework:** Angular (Standalone Components, No NgModules).
@@ -11,15 +11,18 @@ Act as a Senior Angular Frontend Engineer specializing in EdTech applications fo
 - **Styling:** Tailwind CSS. Use specific colors: Primary (Space Blue), Accent (Star Yellow), Success (Alien Green), Error (Comet Red).
 - **Icons:** Lucide-Angular.
 - **Audio:** Integrate `howler.js` for sound effects (clicks, success, failure, level complete). create a `SoundService`.
+- **Backend:** Supabase (PostgreSQL, Auth, Realtime).
+- **Client:** `@supabase/supabase-js`.
 
 ### CORE FEATURES & LOGIC implementation details:
 
-1. **Service Layer (`StorageService`):**
-   - Manage `users` and `currentSession` in LocalStorage.
-   - Mock delays (300ms) to simulate async feel using RxJS `delay`.
+1. **Service Layer (Supabase Integration):**
+   - **Authentication:** Use Supabase Auth for user accounts (parents/teachers or direct).
+   - **Data Access:** Services to read/write `profiles` and `progress` from Supabase tables.
+   - **Security:** Implement Row Level Security (RLS) policies.
 
 2. **Routing Flow:**
-   - `/login`: Simple mock login form (Accepts any email).
+   - `/login`: Login/Signup screen integrated with Supabase Auth.
    - `/profile-select`: List existing profiles or create new (Name, Age, Avatar picker).
    - `/dashboard`: The "Mission Control". Shows 10 Planets (Tables 1-10). Visual indicators (lock icons, stars) based on progress.
    - `/exercise/:tableId`: The game screen.
@@ -38,10 +41,10 @@ Act as a Senior Angular Frontend Engineer specializing in EdTech applications fo
 
 ### STEP-BY-STEP IMPLEMENTATION PLAN:
 1. Setup global styles, Tailwind config (colors/fonts), and SoundService.
-2. Implement `StorageService` with the defined data models (Profiles, Progress).
+2. Initialize Supabase client and create `AuthService` / `DataService`. Create tables in Supabase.
 3. Build Login & Profile Selection/Creation screens.
 4. Build Dashboard with Planet grid layout.
 5. Build the Game Engine (Question generation logic, State management with Signals).
 6. Implement the Results/Rewards screen logic.
 
-Please start by scaffolding the application structure and the `StorageService` with the Typescript interfaces.
+Please start by scaffolding the application structure and the Supabase configuration (environment variables, client setup).

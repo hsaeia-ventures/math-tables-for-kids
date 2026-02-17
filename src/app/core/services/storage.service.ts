@@ -16,12 +16,13 @@ export class StorageService {
 
   profiles = signal<Profile[]>([]);
   activeProfile = signal<Profile | null>(null);
+  loadingProfiles = signal<boolean>(false);
 
   constructor() {
     effect(() => {
       const user = this.auth.currentUser();
-      console.log('StorageService: Auth user state changed:', user?.uid);
       if (user) {
+        this.loadingProfiles.set(true);
         this.loadProfiles(user.uid);
       } else {
         this.clearData();
@@ -32,20 +33,21 @@ export class StorageService {
   private clearData(): void {
     this.profiles.set([]);
     this.activeProfile.set(null);
+    this.loadingProfiles.set(false);
   }
 
   private loadProfiles(userId: string): void {
-    console.log('StorageService: Loading profiles for user:', userId);
     const profilesRef = collection(this.firestore, `users/${userId}/profiles`);
     collectionData(profilesRef, { idField: 'id' }).pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: (profiles) => {
-        console.log('StorageService: Profiles loaded:', profiles);
         this.profiles.set(profiles as Profile[]);
+        this.loadingProfiles.set(false);
       },
       error: (error) => {
         console.error('StorageService: Error loading profiles:', error);
+        this.loadingProfiles.set(false);
       }
     });
   }

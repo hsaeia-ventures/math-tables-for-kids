@@ -25,34 +25,41 @@ import { AuthService } from '../../core/services/auth.service';
         Choose Your Commander
       </h1>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        @for (profile of profiles(); track profile.id) {
-          <button
-            (click)="selectProfile(profile.id)"
-            class="juicy-button bg-white/10 backdrop-blur-md p-6 rounded-3xl border-2 border-white/10 hover:border-accent text-center group"
-          >
-            <div class="w-32 h-32 mx-auto mb-4 rounded-full bg-blue-500/30 flex items-center justify-center text-6xl group-hover:scale-110 transition-transform">
-              {{ profile.avatar }}
-            </div>
-            <h2 class="text-2xl font-bold text-white mb-1">{{ profile.name }}</h2>
-            <p class="text-blue-200">Age: {{ profile.age }}</p>
-            <div class="mt-4 flex items-center justify-center gap-2 text-accent">
-              <span class="text-xl">★</span>
-              <span class="font-bold text-xl">{{ profile.totalStars }}</span>
-            </div>
-          </button>
-        }
+      @if (storage.loadingProfiles()) {
+        <div class="flex flex-col items-center justify-center min-h-[400px]">
+          <div class="animate-spin h-16 w-16 border-4 border-accent border-t-transparent rounded-full mb-4 shadow-[0_0_15px_rgba(234,179,8,0.5)]"></div>
+          <p class="text-xl text-blue-200 animate-pulse">Scanning for Commanders...</p>
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          @for (profile of profiles(); track profile.id) {
+            <button
+              (click)="selectProfile(profile.id)"
+              class="juicy-button bg-white/10 backdrop-blur-md p-6 rounded-3xl border-2 border-white/10 hover:border-accent text-center group"
+            >
+              <div class="w-32 h-32 mx-auto mb-4 rounded-full bg-blue-500/30 flex items-center justify-center text-6xl group-hover:scale-110 transition-transform">
+                {{ profile.avatar }}
+              </div>
+              <h2 class="text-2xl font-bold text-white mb-1">{{ profile.name }}</h2>
+              <p class="text-blue-200">Age: {{ profile.age }}</p>
+              <div class="mt-4 flex items-center justify-center gap-2 text-accent">
+                <span class="text-xl">★</span>
+                <span class="font-bold text-xl">{{ profile.totalStars }}</span>
+              </div>
+            </button>
+          }
 
-        <button
-          (click)="showCreate.set(true)"
-          class="juicy-button bg-white/5 backdrop-blur-sm p-6 rounded-3xl border-2 border-dashed border-white/20 hover:border-white/40 flex flex-col items-center justify-center gap-4 text-white/60 hover:text-white"
-        >
-          <div class="p-6 rounded-full bg-white/10">
-            <lucide-icon [name]="Plus" class="w-12 h-12"></lucide-icon>
-          </div>
-          <span class="text-xl font-bold">New Commander</span>
-        </button>
-      </div>
+          <button
+            (click)="showCreate.set(true)"
+            class="juicy-button bg-white/5 backdrop-blur-sm p-6 rounded-3xl border-2 border-dashed border-white/20 hover:border-white/40 flex flex-col items-center justify-center gap-4 text-white/60 hover:text-white"
+          >
+            <div class="p-6 rounded-full bg-white/10">
+              <lucide-icon [name]="Plus" class="w-12 h-12"></lucide-icon>
+            </div>
+            <span class="text-xl font-bold">New Commander</span>
+          </button>
+        </div>
+      }
 
       @if (showCreate()) {
         <div class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -117,7 +124,7 @@ import { AuthService } from '../../core/services/auth.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProfileSelectComponent {
-  private storage = inject(StorageService);
+  public storage = inject(StorageService);
   private sound = inject(SoundService);
   private router = inject(Router);
   private auth = inject(AuthService);

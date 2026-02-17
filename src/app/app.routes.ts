@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { profileGuard } from './core/guards/profile.guard';
 
 export const routes: Routes = [
   {
@@ -13,12 +14,12 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    canActivate: [authGuard],
+    canActivate: [authGuard, profileGuard],
     loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
   },
   {
     path: 'exercise/:tableId',
-    canActivate: [authGuard],
+    canActivate: [authGuard, profileGuard],
     loadComponent: () => import('./features/game/game.component').then(m => m.GameComponent)
   },
   {

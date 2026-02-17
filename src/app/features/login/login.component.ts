@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { SoundService } from '../../core/services/sound.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { StarBackgroundComponent } from '../../shared/components/star-background.component';
 
 @Component({
@@ -44,6 +45,7 @@ import { StarBackgroundComponent } from '../../shared/components/star-background
 export class LoginComponent {
   private auth = inject(AuthService);
   private sound = inject(SoundService);
+  private notify = inject(NotificationService);
   private router = inject(Router);
 
   loading = signal(false);
@@ -57,7 +59,7 @@ export class LoginComponent {
       this.router.navigate(['/profile-select']);
     } catch (error) {
       console.error('Login failed', error);
-      // Optional: Add error notification here
+      this.notify.show('No se pudo iniciar sesión. Inténtalo de nuevo.', 'error');
     } finally {
       this.loading.set(false);
     }

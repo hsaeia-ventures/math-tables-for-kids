@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { StorageService } from './storage.service';
 import { AuthService } from './auth.service';
+import { NotificationService } from './notification.service';
 import {
    Firestore, collection, collectionData, doc, setDoc
 } from '@angular/fire/firestore';
@@ -28,6 +29,10 @@ describe('StorageService', () => {
       user$: of(null),
    };
 
+   const mockNotificationService = {
+      show: vi.fn(),
+   };
+
    const fakeUser = { uid: 'user-123' };
 
    beforeEach(() => {
@@ -42,6 +47,7 @@ describe('StorageService', () => {
          providers: [
             StorageService,
             { provide: AuthService, useValue: mockAuthService },
+            { provide: NotificationService, useValue: mockNotificationService },
             { provide: Firestore, useValue: {} },
          ],
       });

@@ -1,5 +1,8 @@
-import { Injectable, signal, inject, effect } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
+import { Injectable, signal, inject, effect, DestroyRef } from '@angular/core';
+import { Observable, of, delay, from } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { Firestore, collection, collectionData, doc, setDoc, updateDoc } from '@angular/fire/firestore';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Profile, TableProgress } from '../models';
 import { AuthService } from './auth.service';
 
@@ -7,19 +10,20 @@ import { AuthService } from './auth.service';
   providedIn: 'root',
 })
 export class StorageService {
-  private readonly USERS_KEY = 'astromath_users';
-
   private auth = inject(AuthService);
+  private firestore = inject(Firestore);
+  private destroyRef = inject(DestroyRef);
 
   profiles = signal<Profile[]>([]);
   activeProfile = signal<Profile | null>(null);
+  loadingProfiles = signal<boolean>(false);
 
   constructor() {
-    // Automatically react to auth changes
     effect(() => {
       const user = this.auth.currentUser();
       if (user) {
-        this.loadProfiles(user.email || user.uid);
+        this.loadingProfiles.set(true);
+        this.loadProfiles(user.uid);
       } else {
         this.clearData();
       }
@@ -29,25 +33,31 @@ export class StorageService {
   private clearData(): void {
     this.profiles.set([]);
     this.activeProfile.set(null);
+    this.loadingProfiles.set(false);
   }
 
-  private loadProfiles(userKey: string): void {
-    const allUsersData = JSON.parse(localStorage.getItem(this.USERS_KEY) || '{}');
-    const userProfiles = allUsersData[userKey] || [];
-    this.profiles.set(userProfiles);
-
-    // If there was an active profile pre-selected (optional logic for future)
-    // For now we just reset it and let user select
-    this.activeProfile.set(null);
+  private loadProfiles(userId: string): void {
+    const profilesRef = collection(this.firestore, `users/${userId}/profiles`);
+    collectionData(profilesRef, { idField: 'id' }).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: (profiles) => {
+        this.profiles.set(profiles as Profile[]);
+        this.loadingProfiles.set(false);
+      },
+      error: (error) => {
+        console.error('StorageService: Error loading profiles:', error);
+        this.loadingProfiles.set(false);
+      }
+    });
   }
 
   createProfile(name: string, age: number, avatar: string): Observable<Profile> {
     const user = this.auth.currentUser();
     if (!user) throw new Error('No user logged in');
-    const userKey = user.email || user.uid;
 
     const newProfile: Profile = {
-      id: crypto.randomUUID(),
+      id: crypto.randomUUID(), // We can let Firestore generate ID too, but keeping consistent for now
       name,
       age,
       avatar,
@@ -60,14 +70,14 @@ export class StorageService {
       })),
     };
 
-    const allUsersData = JSON.parse(localStorage.getItem(this.USERS_KEY) || '{}');
-    const userProfiles = allUsersData[userKey] || [];
-    userProfiles.push(newProfile);
-    allUsersData[userKey] = userProfiles;
-    localStorage.setItem(this.USERS_KEY, JSON.stringify(allUsersData));
+    const profilesRef = collection(this.firestore, `users/${user.uid}/profiles`);
+    // Use setDoc with specific ID or addDoc. Using setDoc since we generated ID.
+    const docRef = doc(profilesRef, newProfile.id);
 
-    this.profiles.set([...userProfiles]);
-    return of(newProfile).pipe(delay(300));
+    return from(setDoc(docRef, newProfile)).pipe(
+      map(() => newProfile),
+      delay(300) // Keep delay for UI feedback feeling if desired
+    );
   }
 
   selectProfile(profileId: string): void {
@@ -79,34 +89,47 @@ export class StorageService {
     const user = this.auth.currentUser();
     const profile = this.activeProfile();
     if (!user || !profile) return of(undefined);
-    const userKey = user.email || user.uid;
 
     const updatedProfile = { ...profile };
-    // Deep copy progress to avoid direct mutation issues
     updatedProfile.progress = profile.progress.map(p => ({ ...p }));
 
     const progressIndex = updatedProfile.progress.findIndex((p) => p.tableId === tableId);
 
     if (progressIndex > -1) {
       const p = updatedProfile.progress[progressIndex];
-      if (type === 'basic') p.basicCompleted = true;
-      if (type === 'advanced') p.advancedCompleted = true;
+      let changed = false;
+
+      if (type === 'basic' && !p.basicCompleted) {
+        p.basicCompleted = true;
+        changed = true;
+      }
+      if (type === 'advanced' && !p.advancedCompleted) {
+        p.advancedCompleted = true;
+        changed = true;
+      }
 
       const starDiff = Math.max(0, stars - p.stars);
-      p.stars = Math.max(p.stars, stars);
-      updatedProfile.totalStars += starDiff;
+      if (starDiff > 0) {
+        p.stars = Math.max(p.stars, stars);
+        updatedProfile.totalStars += starDiff;
+        changed = true;
+      }
+
+      if (changed) {
+        const profileRef = doc(this.firestore, `users/${user.uid}/profiles/${profile.id}`);
+
+        // Optimistic update locally
+        this.activeProfile.set(updatedProfile);
+
+        return from(updateDoc(profileRef, {
+          progress: updatedProfile.progress,
+          totalStars: updatedProfile.totalStars
+        })).pipe(
+          delay(300)
+        );
+      }
     }
 
-    const allUsersData = JSON.parse(localStorage.getItem(this.USERS_KEY) || '{}');
-    const userProfiles: Profile[] = allUsersData[userKey];
-    const profileIndex = userProfiles.findIndex((p) => p.id === profile.id);
-    userProfiles[profileIndex] = updatedProfile;
-    allUsersData[userKey] = userProfiles;
-    localStorage.setItem(this.USERS_KEY, JSON.stringify(allUsersData));
-
-    this.activeProfile.set(updatedProfile);
-    this.profiles.set([...userProfiles]);
-
-    return of(undefined).pipe(delay(300));
+    return of(undefined);
   }
 }

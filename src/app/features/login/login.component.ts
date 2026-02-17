@@ -16,7 +16,7 @@ import { StarBackgroundComponent } from '../../shared/components/star-background
         class="bg-white/10 backdrop-blur-md p-8 rounded-3xl border-2 border-white/20 w-full max-w-md text-center shadow-2xl"
       >
         <h1 class="text-5xl font-bold mb-2 text-accent drop-shadow-lg">AstroMath</h1>
-        <p class="text-blue-200 mb-8 text-lg">Ready for your math mission?</p>
+        <p class="text-blue-200 mb-8 text-lg">¿Listo para tu misión matemática?</p>
 
         <div class="space-y-6">
           <button
@@ -26,15 +26,15 @@ import { StarBackgroundComponent } from '../../shared/components/star-background
           >
             @if (loading()) {
               <div class="animate-spin h-6 w-6 border-4 border-blue-500 border-t-transparent rounded-full"></div>
-              Powering Up...
+              Preparando...
             } @else {
               <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6" alt="Google Logo">
-              Commander Sign-in
+              Iniciar sesión
             }
           </button>
           
           <p class="text-blue-200/60 text-sm mt-4 italic">
-            Signing in will automatically create your mission log if it's your first time.
+            Al iniciar sesión se creará tu registro de misión si es tu primera vez.
           </p>
         </div>
       </div>

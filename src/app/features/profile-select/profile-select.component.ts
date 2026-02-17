@@ -17,18 +17,18 @@ import { AuthService } from '../../core/services/auth.service';
       <div class="absolute top-4 right-4 z-10">
         <button (click)="logout()" class="p-2 text-white/60 hover:text-white flex flex-col items-center transition-colors">
           <lucide-icon [name]="LogOut" class="w-6 h-6"></lucide-icon>
-          <span class="text-xs">Exit</span>
+          <span class="text-xs">Salir</span>
         </button>
       </div>
 
       <h1 class="text-4xl font-bold text-center text-accent mb-12 drop-shadow-md pt-8">
-        Choose Your Commander
+        Elige tu Comandante
       </h1>
 
       @if (storage.loadingProfiles()) {
         <div class="flex flex-col items-center justify-center min-h-[400px]">
           <div class="animate-spin h-16 w-16 border-4 border-accent border-t-transparent rounded-full mb-4 shadow-[0_0_15px_rgba(234,179,8,0.5)]"></div>
-          <p class="text-xl text-blue-200 animate-pulse">Scanning for Commanders...</p>
+          <p class="text-xl text-blue-200 animate-pulse">Buscando Comandantes...</p>
         </div>
       } @else {
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -41,7 +41,7 @@ import { AuthService } from '../../core/services/auth.service';
                 {{ profile.avatar }}
               </div>
               <h2 class="text-2xl font-bold text-white mb-1">{{ profile.name }}</h2>
-              <p class="text-blue-200">Age: {{ profile.age }}</p>
+              <p class="text-blue-200">Edad: {{ profile.age }}</p>
               <div class="mt-4 flex items-center justify-center gap-2 text-accent">
                 <span class="text-xl">★</span>
                 <span class="font-bold text-xl">{{ profile.totalStars }}</span>
@@ -56,7 +56,7 @@ import { AuthService } from '../../core/services/auth.service';
             <div class="p-6 rounded-full bg-white/10">
               <lucide-icon [name]="Plus" class="w-12 h-12"></lucide-icon>
             </div>
-            <span class="text-xl font-bold">New Commander</span>
+            <span class="text-xl font-bold">Nuevo Comandante</span>
           </button>
         </div>
       }
@@ -68,11 +68,11 @@ import { AuthService } from '../../core/services/auth.service';
               (click)="showCreate.set(false)"
               class="absolute top-4 right-4 text-white/40 hover:text-white"
             >✕</button>
-            <h2 class="text-3xl font-bold text-accent mb-6">Enlist New Pilot</h2>
+            <h2 class="text-3xl font-bold text-accent mb-6">Nuevo Piloto</h2>
 
             <form (submit)="onCreateProfile()" class="space-y-6">
               <div>
-                <label class="block text-sm font-medium text-blue-100 mb-2">Name</label>
+                <label class="block text-sm font-medium text-blue-100 mb-2">Nombre</label>
                 <input
                   type="text"
                   [(ngModel)]="newName"
@@ -82,7 +82,7 @@ import { AuthService } from '../../core/services/auth.service';
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-blue-100 mb-2">Age</label>
+                <label class="block text-sm font-medium text-blue-100 mb-2">Edad</label>
                 <input
                   type="number"
                   [(ngModel)]="newAge"
@@ -94,7 +94,7 @@ import { AuthService } from '../../core/services/auth.service';
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-blue-100 mb-2">Select Avatar</label>
+                <label class="block text-sm font-medium text-blue-100 mb-2">Seleccionar Avatar</label>
                 <div class="flex justify-between gap-2">
                   @for (av of avatars; track av) {
                     <button
@@ -113,7 +113,7 @@ import { AuthService } from '../../core/services/auth.service';
                 type="submit"
                 class="juicy-button w-full py-4 bg-accent text-primary font-bold text-xl shadow-[0_4px_0_0_#ca8a04]"
               >
-                Create Pilot
+                Crear Piloto
               </button>
             </form>
           </div>

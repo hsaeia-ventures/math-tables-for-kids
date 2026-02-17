@@ -57,7 +57,7 @@ describe('ProfileSelectComponent', () => {
    it('should show loading state when profiles are loading', async () => {
       loadingProfilesSignal.set(true);
       await setup();
-      expect(screen.getByText(/scanning for commanders/i)).toBeTruthy();
+      expect(screen.getByText(/buscando comandantes/i)).toBeTruthy();
    });
 
    it('should show existing profiles with name, age, and stars', async () => {
@@ -69,45 +69,45 @@ describe('ProfileSelectComponent', () => {
       await setup();
 
       expect(screen.getByText('Luna')).toBeTruthy();
-      expect(screen.getByText('Age: 8')).toBeTruthy();
+      expect(screen.getByText('Edad: 8')).toBeTruthy();
       expect(screen.getByText('15')).toBeTruthy();
       expect(screen.getByText('Max')).toBeTruthy();
-      expect(screen.getByText('Age: 10')).toBeTruthy();
+      expect(screen.getByText('Edad: 10')).toBeTruthy();
       expect(screen.getByText('25')).toBeTruthy();
    });
 
    it('should always show the "New Commander" button', async () => {
       await setup();
-      expect(screen.getByText(/new commander/i)).toBeTruthy();
+      expect(screen.getByText(/nuevo comandante/i)).toBeTruthy();
    });
 
    it('should open the create modal when "New Commander" is clicked', async () => {
       const { fixture } = await setup();
-      const button = screen.getByText(/new commander/i);
+      const button = screen.getByText(/nuevo comandante/i);
 
       fireEvent.click(button);
       fixture.detectChanges();
 
-      expect(screen.getByText(/enlist new pilot/i)).toBeTruthy();
+      expect(screen.getByText(/nuevo piloto/i)).toBeTruthy();
       expect(screen.getByRole('textbox')).toBeTruthy();
       expect(screen.getByRole('spinbutton')).toBeTruthy();
-      expect(screen.getByText(/select avatar/i)).toBeTruthy();
-      expect(screen.getByText(/create pilot/i)).toBeTruthy();
+      expect(screen.getByText(/seleccionar avatar/i)).toBeTruthy();
+      expect(screen.getByText(/crear piloto/i)).toBeTruthy();
    });
 
    it('should close the modal when the close button is clicked', async () => {
       const { fixture } = await setup();
 
       // Open modal
-      fireEvent.click(screen.getByText(/new commander/i));
+      fireEvent.click(screen.getByText(/nuevo comandante/i));
       fixture.detectChanges();
-      expect(screen.getByText(/enlist new pilot/i)).toBeTruthy();
+      expect(screen.getByText(/nuevo piloto/i)).toBeTruthy();
 
       // Close modal
       fireEvent.click(screen.getByText('✕'));
       fixture.detectChanges();
 
-      expect(screen.queryByText(/enlist new pilot/i)).toBeNull();
+      expect(screen.queryByText(/nuevo piloto/i)).toBeNull();
    });
 
    it('should call createProfile when form is submitted with valid data', async () => {
@@ -117,7 +117,7 @@ describe('ProfileSelectComponent', () => {
       const { fixture } = await setup();
 
       // Open modal
-      fireEvent.click(screen.getByText(/new commander/i));
+      fireEvent.click(screen.getByText(/nuevo comandante/i));
       fixture.detectChanges();
 
       // Set form values directly on the component instance (ngModel doesn't propagate from DOM without Zone.js)
@@ -126,7 +126,7 @@ describe('ProfileSelectComponent', () => {
       fixture.detectChanges();
 
       // Submit
-      fireEvent.click(screen.getByText(/create pilot/i));
+      fireEvent.click(screen.getByText(/crear piloto/i));
       fixture.detectChanges();
 
       expect(mockSoundService.play).toHaveBeenCalledWith('click');
@@ -140,29 +140,29 @@ describe('ProfileSelectComponent', () => {
       const { fixture } = await setup();
 
       // Open modal
-      fireEvent.click(screen.getByText(/new commander/i));
+      fireEvent.click(screen.getByText(/nuevo comandante/i));
       fixture.detectChanges();
 
       // Set name directly and submit
       fixture.componentInstance.newName = 'Luna';
       fixture.detectChanges();
 
-      fireEvent.click(screen.getByText(/create pilot/i));
+      fireEvent.click(screen.getByText(/crear piloto/i));
       fixture.detectChanges();
 
       // Modal should close after creation
-      expect(screen.queryByText(/enlist new pilot/i)).toBeNull();
+      expect(screen.queryByText(/nuevo piloto/i)).toBeNull();
    });
 
    it('should not call createProfile if name is empty', async () => {
       const { fixture } = await setup();
 
       // Open modal
-      fireEvent.click(screen.getByText(/new commander/i));
+      fireEvent.click(screen.getByText(/nuevo comandante/i));
       fixture.detectChanges();
 
       // Don't fill name, just submit
-      fireEvent.click(screen.getByText(/create pilot/i));
+      fireEvent.click(screen.getByText(/crear piloto/i));
       fixture.detectChanges();
 
       expect(mockStorageService.createProfile).not.toHaveBeenCalled();
@@ -186,7 +186,7 @@ describe('ProfileSelectComponent', () => {
       mockAuthService.logout.mockResolvedValue(undefined);
       const { fixture } = await setup();
 
-      const exitButton = screen.getByText(/exit/i);
+      const exitButton = screen.getByText(/salir/i);
       fireEvent.click(exitButton);
       fixture.detectChanges();
 

@@ -1,10 +1,11 @@
 import { Injectable, signal, inject, effect, DestroyRef } from '@angular/core';
-import { Observable, of, delay, from } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, of, delay, from, throwError } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { Firestore, collection, collectionData, doc, setDoc, updateDoc } from '@angular/fire/firestore';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Profile, TableProgress } from '../models';
 import { AuthService } from './auth.service';
+import { NotificationService } from './notification.service';
 
 @Injectable({
   providedIn: 'root',
@@ -13,6 +14,7 @@ export class StorageService {
   private auth = inject(AuthService);
   private firestore = inject(Firestore);
   private destroyRef = inject(DestroyRef);
+  private notify = inject(NotificationService);
 
   profiles = signal<Profile[]>([]);
   activeProfile = signal<Profile | null>(null);
@@ -47,6 +49,7 @@ export class StorageService {
       },
       error: (error) => {
         console.error('StorageService: Error loading profiles:', error);
+        this.notify.show('Error al cargar los perfiles.', 'error');
         this.loadingProfiles.set(false);
       }
     });
@@ -76,7 +79,12 @@ export class StorageService {
 
     return from(setDoc(docRef, newProfile)).pipe(
       map(() => newProfile),
-      delay(300) // Keep delay for UI feedback feeling if desired
+      delay(300),
+      catchError((error) => {
+        console.error('StorageService: Error creating profile:', error);
+        this.notify.show('Error al crear el perfil.', 'error');
+        return throwError(() => error);
+      })
     );
   }
 

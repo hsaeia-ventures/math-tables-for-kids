@@ -1,4 +1,4 @@
-import { Injectable, signal, inject, effect } from '@angular/core';
+import { Injectable, signal, inject, effect, DestroyRef } from '@angular/core';
 import { Observable, of, delay, from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Firestore, collection, collectionData, doc, setDoc, updateDoc } from '@angular/fire/firestore';
@@ -12,6 +12,7 @@ import { AuthService } from './auth.service';
 export class StorageService {
   private auth = inject(AuthService);
   private firestore = inject(Firestore);
+  private destroyRef = inject(DestroyRef);
 
   profiles = signal<Profile[]>([]);
   activeProfile = signal<Profile | null>(null);
@@ -19,6 +20,7 @@ export class StorageService {
   constructor() {
     effect(() => {
       const user = this.auth.currentUser();
+      console.log('StorageService: Auth user state changed:', user?.uid);
       if (user) {
         this.loadProfiles(user.uid);
       } else {
@@ -33,11 +35,18 @@ export class StorageService {
   }
 
   private loadProfiles(userId: string): void {
+    console.log('StorageService: Loading profiles for user:', userId);
     const profilesRef = collection(this.firestore, `users/${userId}/profiles`);
     collectionData(profilesRef, { idField: 'id' }).pipe(
-      takeUntilDestroyed()
-    ).subscribe((profiles) => {
-      this.profiles.set(profiles as Profile[]);
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: (profiles) => {
+        console.log('StorageService: Profiles loaded:', profiles);
+        this.profiles.set(profiles as Profile[]);
+      },
+      error: (error) => {
+        console.error('StorageService: Error loading profiles:', error);
+      }
     });
   }
 

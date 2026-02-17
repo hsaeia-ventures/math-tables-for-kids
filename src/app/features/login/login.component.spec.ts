@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/angular';
 import { LoginComponent } from './login.component';
 import { AuthService } from '../../core/services/auth.service';
 import { SoundService } from '../../core/services/sound.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { Router } from '@angular/router';
 import { vi, describe, it, beforeEach } from 'vitest';
 
@@ -12,6 +13,10 @@ describe('LoginComponent', () => {
 
    const mockSoundService = {
       play: vi.fn(),
+   };
+
+   const mockNotificationService = {
+      show: vi.fn(),
    };
 
    const mockRouter = {
@@ -28,6 +33,7 @@ describe('LoginComponent', () => {
          providers: [
             { provide: AuthService, useValue: mockAuthService },
             { provide: SoundService, useValue: mockSoundService },
+            { provide: NotificationService, useValue: mockNotificationService },
             { provide: Router, useValue: mockRouter },
          ],
       });
@@ -95,6 +101,11 @@ describe('LoginComponent', () => {
       expect(screen.getByRole('button', { name: /commander sign-in/i })).toBeTruthy();
       // Navigation should not happen on failure
       expect(mockRouter.navigate).not.toHaveBeenCalled();
+      // Should show an error notification to the user
+      expect(mockNotificationService.show).toHaveBeenCalledWith(
+         expect.stringContaining('No se pudo iniciar'),
+         'error'
+      );
    });
 });
 

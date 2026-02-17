@@ -2,18 +2,26 @@ import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { LucideAngularModule, Plus, Rocket, User } from 'lucide-angular';
+import { LucideAngularModule, Plus, Rocket, User, LogOut } from 'lucide-angular';
 import { StorageService } from '../../core/services/storage.service';
 import { SoundService } from '../../core/services/sound.service';
 import { StarBackgroundComponent } from '../../shared/components/star-background.component';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-profile-select',
   imports: [CommonModule, FormsModule, LucideAngularModule, StarBackgroundComponent],
   template: `
     <app-star-background />
-    <div class="min-h-screen p-8 max-w-6xl mx-auto">
-      <h1 class="text-4xl font-bold text-center text-accent mb-12 drop-shadow-md">
+    <div class="min-h-screen p-8 max-w-6xl mx-auto relative">
+      <div class="absolute top-4 right-4 z-10">
+        <button (click)="logout()" class="p-2 text-white/60 hover:text-white flex flex-col items-center transition-colors">
+          <lucide-icon [name]="LogOut" class="w-6 h-6"></lucide-icon>
+          <span class="text-xs">Exit</span>
+        </button>
+      </div>
+
+      <h1 class="text-4xl font-bold text-center text-accent mb-12 drop-shadow-md pt-8">
         Choose Your Commander
       </h1>
 
@@ -112,10 +120,12 @@ export class ProfileSelectComponent {
   private storage = inject(StorageService);
   private sound = inject(SoundService);
   private router = inject(Router);
+  private auth = inject(AuthService);
 
   readonly Plus = Plus;
   readonly Rocket = Rocket;
   readonly User = User;
+  readonly LogOut = LogOut;
 
   profiles = this.storage.profiles;
   showCreate = signal(false);
@@ -138,5 +148,11 @@ export class ProfileSelectComponent {
     this.sound.play('click');
     this.storage.selectProfile(id);
     this.router.navigate(['/dashboard']);
+  }
+
+  async logout(): Promise<void> {
+    this.sound.play('click');
+    await this.auth.logout();
+    this.router.navigate(['/login']);
   }
 }

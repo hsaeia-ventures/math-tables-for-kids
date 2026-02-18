@@ -22,14 +22,14 @@ import { StarBackgroundComponent } from '../../shared/components/star-background
             <h2 class="text-2xl font-bold">{{ activeProfile()?.name }}</h2>
             <div class="flex items-center text-accent font-bold">
                <lucide-icon [name]="Star" class="w-4 h-4 mr-1 fill-accent"></lucide-icon>
-               {{ activeProfile()?.totalStars }} Stars
+               {{ activeProfile()?.totalStars }} Estrellas
             </div>
           </div>
         </div>
 
         <button (click)="logout()" class="p-2 text-white/60 hover:text-white flex flex-col items-center">
           <lucide-icon [name]="LogOut" class="w-6 h-6"></lucide-icon>
-          <span class="text-xs">Exit</span>
+          <span class="text-xs">Salir</span>
         </button>
       </header>
 
@@ -52,9 +52,9 @@ import { StarBackgroundComponent } from '../../shared/components/star-background
                 }
               </div>
               <div class="text-center">
-                <h3 class="text-xl font-bold">Table {{ planet.tableId }}</h3>
+                <h3 class="text-xl font-bold">Tabla {{ planet.tableId }}</h3>
                 <p class="text-xs text-blue-200 uppercase tracking-widest mt-1">
-                  {{ planet.basicCompleted ? (planet.advancedCompleted ? 'Mastered' : 'Advanced Next') : 'Training' }}
+                  {{ planet.basicCompleted ? (planet.advancedCompleted ? 'Dominada' : 'Avanzado') : 'Entrenando' }}
                 </p>
               </div>
             </button>

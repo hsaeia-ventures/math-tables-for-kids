@@ -76,12 +76,12 @@ describe('ProfileSelectComponent', () => {
       expect(screen.getByText('25')).toBeTruthy();
    });
 
-   it('should always show the "New Commander" button', async () => {
+   it('should always show the "Nuevo Comandante" button', async () => {
       await setup();
       expect(screen.getByText(/nuevo comandante/i)).toBeTruthy();
    });
 
-   it('should open the create modal when "New Commander" is clicked', async () => {
+   it('should open the create modal when "Nuevo Comandante" is clicked', async () => {
       const { fixture } = await setup();
       const button = screen.getByText(/nuevo comandante/i);
 
@@ -120,9 +120,8 @@ describe('ProfileSelectComponent', () => {
       fireEvent.click(screen.getByText(/nuevo comandante/i));
       fixture.detectChanges();
 
-      // Set form values directly on the component instance (ngModel doesn't propagate from DOM without Zone.js)
-      fixture.componentInstance.newName = 'Luna';
-      fixture.componentInstance.newAge = 8;
+      // Set form values via the reactive form
+      fixture.componentInstance.profileForm.setValue({ name: 'Luna', age: 8 });
       fixture.detectChanges();
 
       // Submit
@@ -143,8 +142,8 @@ describe('ProfileSelectComponent', () => {
       fireEvent.click(screen.getByText(/nuevo comandante/i));
       fixture.detectChanges();
 
-      // Set name directly and submit
-      fixture.componentInstance.newName = 'Luna';
+      // Set name via the reactive form and submit
+      fixture.componentInstance.profileForm.setValue({ name: 'Luna', age: 7 });
       fixture.detectChanges();
 
       fireEvent.click(screen.getByText(/crear piloto/i));
@@ -154,15 +153,16 @@ describe('ProfileSelectComponent', () => {
       expect(screen.queryByText(/nuevo piloto/i)).toBeNull();
    });
 
-   it('should not call createProfile if name is empty', async () => {
+   it('should not call createProfile if form is invalid (empty name)', async () => {
       const { fixture } = await setup();
 
       // Open modal
       fireEvent.click(screen.getByText(/nuevo comandante/i));
       fixture.detectChanges();
 
-      // Don't fill name, just submit
-      fireEvent.click(screen.getByText(/crear piloto/i));
+      // Name is empty by default — form should be invalid
+      // Submit (button is disabled, but we call the method directly to be safe)
+      fixture.componentInstance.onCreateProfile();
       fixture.detectChanges();
 
       expect(mockStorageService.createProfile).not.toHaveBeenCalled();
@@ -182,7 +182,7 @@ describe('ProfileSelectComponent', () => {
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/dashboard']);
    });
 
-   it('should logout and navigate to /login when Exit is clicked', async () => {
+   it('should logout and navigate to /login when Salir is clicked', async () => {
       mockAuthService.logout.mockResolvedValue(undefined);
       const { fixture } = await setup();
 
@@ -197,5 +197,77 @@ describe('ProfileSelectComponent', () => {
 
       expect(mockAuthService.logout).toHaveBeenCalled();
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
+   });
+
+   // --- New validation tests ---
+
+   it('should disable "Crear Piloto" button when form is invalid', async () => {
+      const { fixture } = await setup();
+
+      fireEvent.click(screen.getByText(/nuevo comandante/i));
+      fixture.detectChanges();
+
+      // Name is empty by default → form is invalid → button should be disabled
+      const submitButton = screen.getByText(/crear piloto/i);
+      expect(submitButton.hasAttribute('disabled')).toBe(true);
+   });
+
+   it('should enable "Crear Piloto" button when form is valid', async () => {
+      const { fixture } = await setup();
+
+      fireEvent.click(screen.getByText(/nuevo comandante/i));
+      fixture.detectChanges();
+
+      // Fill valid data
+      fixture.componentInstance.profileForm.setValue({ name: 'Luna', age: 8 });
+      fixture.detectChanges();
+
+      const submitButton = screen.getByText(/crear piloto/i);
+      expect(submitButton.hasAttribute('disabled')).toBe(false);
+   });
+
+   it('should show name validation error when name is too short', async () => {
+      const { fixture } = await setup();
+
+      fireEvent.click(screen.getByText(/nuevo comandante/i));
+      fixture.detectChanges();
+
+      // Set name to 1 char and mark touched
+      const nameControl = fixture.componentInstance.profileForm.get('name')!;
+      nameControl.setValue('A');
+      nameControl.markAsTouched();
+      fixture.detectChanges();
+
+      expect(screen.getByText(/mínimo 2 caracteres/i)).toBeTruthy();
+   });
+
+   it('should show age validation error when age is below minimum', async () => {
+      const { fixture } = await setup();
+
+      fireEvent.click(screen.getByText(/nuevo comandante/i));
+      fixture.detectChanges();
+
+      // Set age below minimum and mark touched
+      const ageControl = fixture.componentInstance.profileForm.get('age')!;
+      ageControl.setValue(2);
+      ageControl.markAsTouched();
+      fixture.detectChanges();
+
+      expect(screen.getByText(/edad mínima: 4 años/i)).toBeTruthy();
+   });
+
+   it('should show age validation error when age is above maximum', async () => {
+      const { fixture } = await setup();
+
+      fireEvent.click(screen.getByText(/nuevo comandante/i));
+      fixture.detectChanges();
+
+      // Set age above maximum and mark touched
+      const ageControl = fixture.componentInstance.profileForm.get('age')!;
+      ageControl.setValue(20);
+      ageControl.markAsTouched();
+      fixture.detectChanges();
+
+      expect(screen.getByText(/edad máxima: 14 años/i)).toBeTruthy();
    });
 });

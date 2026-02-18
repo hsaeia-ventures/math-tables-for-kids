@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LucideAngularModule, Plus, Rocket, User, LogOut } from 'lucide-angular';
 import { StorageService } from '../../core/services/storage.service';
@@ -10,7 +10,7 @@ import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-profile-select',
-  imports: [CommonModule, FormsModule, LucideAngularModule, StarBackgroundComponent],
+  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule, StarBackgroundComponent],
   template: `
     <app-star-background />
     <div class="min-h-screen p-8 max-w-6xl mx-auto relative">
@@ -50,7 +50,7 @@ import { AuthService } from '../../core/services/auth.service';
           }
 
           <button
-            (click)="showCreate.set(true)"
+            (click)="openCreateModal()"
             class="juicy-button bg-white/5 backdrop-blur-sm p-6 rounded-3xl border-2 border-dashed border-white/20 hover:border-white/40 flex flex-col items-center justify-center gap-4 text-white/60 hover:text-white"
           >
             <div class="p-6 rounded-full bg-white/10">
@@ -65,33 +65,51 @@ import { AuthService } from '../../core/services/auth.service';
         <div class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div class="bg-primary border-4 border-accent p-8 rounded-[2rem] w-full max-w-md shadow-2xl relative">
             <button
-              (click)="showCreate.set(false)"
+              (click)="closeCreateModal()"
               class="absolute top-4 right-4 text-white/40 hover:text-white"
             >✕</button>
             <h2 class="text-3xl font-bold text-accent mb-6">Nuevo Piloto</h2>
 
-            <form (submit)="onCreateProfile()" class="space-y-6">
+            <form [formGroup]="profileForm" (ngSubmit)="onCreateProfile()" class="space-y-6">
               <div>
                 <label class="block text-sm font-medium text-blue-100 mb-2">Nombre</label>
                 <input
                   type="text"
-                  [(ngModel)]="newName"
-                  name="newName"
-                  required
-                  class="w-full px-4 py-3 rounded-xl bg-white/10 border-2 border-white/10 text-white outline-none focus:border-accent"
+                  formControlName="name"
+                  class="w-full px-4 py-3 rounded-xl bg-white/10 border-2 text-white outline-none transition-colors"
+                  [class]="profileForm.get('name')!.invalid && profileForm.get('name')!.touched ? 'border-red-400 focus:border-red-400' : 'border-white/10 focus:border-accent'"
                 />
+                @if (profileForm.get('name')!.touched && profileForm.get('name')!.invalid) {
+                  <div class="mt-1 text-sm text-red-400">
+                    @if (profileForm.get('name')!.hasError('required')) {
+                      El nombre es obligatorio.
+                    } @else if (profileForm.get('name')!.hasError('minlength')) {
+                      Mínimo 2 caracteres.
+                    } @else if (profileForm.get('name')!.hasError('maxlength')) {
+                      Máximo 20 caracteres.
+                    }
+                  </div>
+                }
               </div>
               <div>
                 <label class="block text-sm font-medium text-blue-100 mb-2">Edad</label>
                 <input
                   type="number"
-                  [(ngModel)]="newAge"
-                  name="newAge"
-                  required
-                  min="4"
-                  max="14"
-                  class="w-full px-4 py-3 rounded-xl bg-white/10 border-2 border-white/10 text-white outline-none focus:border-accent"
+                  formControlName="age"
+                  class="w-full px-4 py-3 rounded-xl bg-white/10 border-2 text-white outline-none transition-colors"
+                  [class]="profileForm.get('age')!.invalid && profileForm.get('age')!.touched ? 'border-red-400 focus:border-red-400' : 'border-white/10 focus:border-accent'"
                 />
+                @if (profileForm.get('age')!.touched && profileForm.get('age')!.invalid) {
+                  <div class="mt-1 text-sm text-red-400">
+                    @if (profileForm.get('age')!.hasError('required')) {
+                      La edad es obligatoria.
+                    } @else if (profileForm.get('age')!.hasError('min')) {
+                      Edad mínima: 4 años.
+                    } @else if (profileForm.get('age')!.hasError('max')) {
+                      Edad máxima: 14 años.
+                    }
+                  </div>
+                }
               </div>
               <div>
                 <label class="block text-sm font-medium text-blue-100 mb-2">Seleccionar Avatar</label>
@@ -111,7 +129,8 @@ import { AuthService } from '../../core/services/auth.service';
 
               <button
                 type="submit"
-                class="juicy-button w-full py-4 bg-accent text-primary font-bold text-xl shadow-[0_4px_0_0_#ca8a04]"
+                [disabled]="profileForm.invalid"
+                class="juicy-button w-full py-4 bg-accent text-primary font-bold text-xl shadow-[0_4px_0_0_#ca8a04] disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Crear Piloto
               </button>
@@ -128,6 +147,7 @@ export class ProfileSelectComponent {
   private sound = inject(SoundService);
   private router = inject(Router);
   private auth = inject(AuthService);
+  private fb = inject(FormBuilder);
 
   readonly Plus = Plus;
   readonly Rocket = Rocket;
@@ -137,17 +157,30 @@ export class ProfileSelectComponent {
   profiles = this.storage.profiles;
   showCreate = signal(false);
 
-  newName = '';
-  newAge = 7;
   avatars = ['🚀', '👨‍🚀', '👽', '🤖', '🌟'];
   selectedAvatar = signal('🚀');
 
+  profileForm = this.fb.group({
+    name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(20)]],
+    age: [7, [Validators.required, Validators.min(4), Validators.max(14)]],
+  });
+
+  openCreateModal(): void {
+    this.profileForm.reset({ name: '', age: 7 });
+    this.selectedAvatar.set('🚀');
+    this.showCreate.set(true);
+  }
+
+  closeCreateModal(): void {
+    this.showCreate.set(false);
+  }
+
   onCreateProfile(): void {
-    if (!this.newName) return;
+    if (this.profileForm.invalid) return;
+    const { name, age } = this.profileForm.getRawValue();
     this.sound.play('click');
-    this.storage.createProfile(this.newName, this.newAge, this.selectedAvatar()).subscribe(() => {
+    this.storage.createProfile(name!, age!, this.selectedAvatar()).subscribe(() => {
       this.showCreate.set(false);
-      this.newName = '';
     });
   }
 

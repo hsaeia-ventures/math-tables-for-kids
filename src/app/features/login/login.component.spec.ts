@@ -41,7 +41,7 @@ describe('LoginComponent', () => {
 
    it('should render the login button', async () => {
       await setup();
-      const button = screen.getByRole('button', { name: /commander sign-in/i });
+      const button = screen.getByRole('button', { name: /iniciar sesión/i });
       expect(button).toBeTruthy();
    });
 
@@ -51,7 +51,7 @@ describe('LoginComponent', () => {
       const loginPromise = new Promise<void>((resolve) => { resolveLogin = resolve; });
       mockAuthService.signInWithGoogle.mockReturnValue(loginPromise);
       const { fixture } = await setup();
-      const button = screen.getByRole('button', { name: /commander sign-in/i });
+      const button = screen.getByRole('button', { name: /iniciar sesión/i });
 
       // Act: click the button
       fireEvent.click(button);
@@ -59,7 +59,7 @@ describe('LoginComponent', () => {
 
       // Assert: Check immediate UI feedback (loading state)
       expect(mockSoundService.play).toHaveBeenCalledWith('click');
-      expect(screen.getByText(/powering up/i)).toBeTruthy();
+      expect(screen.getByText(/preparando/i)).toBeTruthy();
 
       // Now resolve the promise to complete the login flow
       resolveLogin();
@@ -80,14 +80,14 @@ describe('LoginComponent', () => {
       const loginPromise = new Promise<void>((_, reject) => { rejectLogin = reject; });
       mockAuthService.signInWithGoogle.mockReturnValue(loginPromise);
       const { fixture } = await setup();
-      const button = screen.getByRole('button', { name: /commander sign-in/i });
+      const button = screen.getByRole('button', { name: /iniciar sesión/i });
 
       // Act: click the button
       fireEvent.click(button);
       fixture.detectChanges();
 
       // The loading state should be active
-      expect(screen.getByText(/powering up/i)).toBeTruthy();
+      expect(screen.getByText(/preparando/i)).toBeTruthy();
 
       // Reject the promise to simulate login failure
       rejectLogin(new Error('Login Failed'));
@@ -97,8 +97,8 @@ describe('LoginComponent', () => {
       fixture.detectChanges();
 
       // Assert: loading should be false, button should be back
-      expect(screen.queryByText(/powering up/i)).toBeNull();
-      expect(screen.getByRole('button', { name: /commander sign-in/i })).toBeTruthy();
+      expect(screen.queryByText(/preparando/i)).toBeNull();
+      expect(screen.getByRole('button', { name: /iniciar sesión/i })).toBeTruthy();
       // Navigation should not happen on failure
       expect(mockRouter.navigate).not.toHaveBeenCalled();
       // Should show an error notification to the user

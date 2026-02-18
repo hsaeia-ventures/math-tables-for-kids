@@ -38,7 +38,7 @@ import { StarBackgroundComponent } from '../../shared/components/star-background
         <!-- Game Content -->
         @if (currentQuestion(); as q) {
           <div class="w-full max-w-2xl bg-white/10 backdrop-blur-md rounded-[3rem] p-12 text-center border-4 border-white/10 shadow-2xl relative overflow-hidden">
-            <h2 class="text-2xl text-blue-200 uppercase tracking-[0.3em] mb-6 font-bold">Question {{ currentIndex() + 1 }} of 10</h2>
+            <h2 class="text-2xl text-blue-200 uppercase tracking-[0.3em] mb-6 font-bold">Pregunta {{ currentIndex() + 1 }} de 10</h2>
             <div class="text-7xl font-bold mb-12 text-white drop-shadow-md">
               {{ q.text }}
             </div>
@@ -49,16 +49,16 @@ import { StarBackgroundComponent } from '../../shared/components/star-background
                 class="absolute inset-0 bg-primary/90 flex flex-col items-center justify-center p-8 animate-in fade-in zoom-in duration-300 z-20"
               >
                 <div class="text-6xl mb-4">
-                  {{ feedback() === 'correct' ? '🌟 AMAZING!' : '☄️ OOPS!' }}
+                  {{ feedback() === 'correct' ? '🌟 ¡GENIAL!' : '☄️ ¡UPS!' }}
                 </div>
                 <div class="text-2xl text-white mb-8">
-                  {{ feedback() === 'correct' ? 'Perfect calculation, Commander!' : 'The correct answer was ' + q.answer }}
+                  {{ feedback() === 'correct' ? '¡Cálculo perfecto, Comandante!' : 'La respuesta correcta era ' + q.answer }}
                 </div>
                 <button
                   (click)="nextQuestion()"
                   class="juicy-button px-10 py-4 bg-white text-primary font-bold text-xl"
                 >
-                  Continue Mission
+                  Continuar Misión
                 </button>
               </div>
             }
@@ -91,29 +91,29 @@ import { StarBackgroundComponent } from '../../shared/components/star-background
                   [disabled]="userInput === null || !!feedback()"
                   class="juicy-button w-full max-w-xs py-6 bg-accent text-primary font-bold text-2xl shadow-[0_6px_0_0_#ca8a04]"
                 >
-                  Fire!
+                  ¡Disparar!
                 </button>
               </div>
             }
           </div>
         }
       } @else {
-        <!-- Results -->
+        <!-- Resultados -->
         <div class="w-full max-w-2xl bg-white/10 backdrop-blur-md rounded-[3rem] p-12 text-center border-4 border-accent shadow-2xl animate-in zoom-in duration-500">
           <div class="flex justify-center mb-8">
              <div class="relative">
                <lucide-icon [name]="Trophy" class="w-32 h-32 text-accent animate-bounce"></lucide-icon>
                <div class="absolute -top-4 -right-4 bg-error text-white px-4 py-2 rounded-full font-bold text-2xl rotate-12">
-                 MISSION COMPLETE
+                 MISIÓN COMPLETA
                </div>
              </div>
           </div>
 
-          <h2 class="text-5xl font-bold mb-4">You got {{ correctCount() }} / 10</h2>
+          <h2 class="text-5xl font-bold mb-4">Acertaste {{ correctCount() }} / 10</h2>
           <p class="text-2xl text-blue-200 mb-12">
-            @if (correctCount() === 10) { Perfect flight! You're a Math Ace! }
-            @else if (correctCount() > 7) { Great job! Starfleet is proud of you! }
-            @else { Good effort! Keep training to reach the stars! }
+            @if (correctCount() === 10) { ¡Vuelo perfecto! ¡Eres un as de las mates! }
+            @else if (correctCount() > 7) { ¡Gran trabajo! ¡La flota estelar está orgullosa! }
+            @else { ¡Buen esfuerzo! ¡Sigue entrenando para alcanzar las estrellas! }
           </p>
 
           <div class="flex justify-center gap-4 mb-12">
@@ -132,13 +132,13 @@ import { StarBackgroundComponent } from '../../shared/components/star-background
               (click)="goBack()"
               class="juicy-button py-6 bg-accent text-primary font-bold text-2xl shadow-[0_6px_0_0_#ca8a04]"
             >
-              Back to Mission Control
+              Volver al Centro de Control
             </button>
             <button
               (click)="restart()"
               class="text-white/60 hover:text-white font-bold"
             >
-              Try Again
+              Intentar de Nuevo
             </button>
           </div>
         </div>

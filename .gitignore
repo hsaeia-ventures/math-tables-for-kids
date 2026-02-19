@@ -38,7 +38,11 @@ yarn-error.log
 testem.log
 /typings
 __screenshots__/
+/context/DEPLOYMENT_PLAN.md
 
 # System files
 .DS_Store
 Thumbs.db
+
+# Environment files
+environments/*

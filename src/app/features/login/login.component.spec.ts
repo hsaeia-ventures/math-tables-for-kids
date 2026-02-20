@@ -107,5 +107,16 @@ describe('LoginComponent', () => {
          'error'
       );
    });
+
+   it('should navigate to /welcome when the home icon button is clicked', async () => {
+      await setup();
+      const homeButton = screen.getByRole('button', { name: /volver a la bienvenida/i });
+      expect(homeButton).toBeTruthy();
+
+      fireEvent.click(homeButton);
+
+      expect(mockSoundService.play).toHaveBeenCalledWith('click');
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/welcome']);
+   });
 });
 

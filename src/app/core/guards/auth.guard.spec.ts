@@ -44,7 +44,7 @@ describe('authGuard', () => {
       expect(mockRouter.navigate).not.toHaveBeenCalled();
    });
 
-   it('should redirect to /login when user is not authenticated', async () => {
+   it('should redirect to /welcome when user is not authenticated', async () => {
       mockAuthService.user$ = of(null);
 
       const result = TestBed.runInInjectionContext(() =>
@@ -53,6 +53,6 @@ describe('authGuard', () => {
 
       const canActivate = await firstValueFrom(result as any);
       expect(canActivate).toBe(false);
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/welcome']);
    });
 });

@@ -4,19 +4,19 @@ import { StarBackgroundComponent } from '../../shared/components/star-background
 import { SoundService } from '../../core/services/sound.service';
 
 @Component({
-   selector: 'app-welcome',
-   imports: [StarBackgroundComponent],
-   template: `
+  selector: 'app-welcome',
+  imports: [StarBackgroundComponent],
+  template: `
     <app-star-background />
     <div class="min-h-screen flex flex-col items-center justify-center p-6 text-center">
 
       <!-- Hero Section -->
-      <section class="animate-fade-in mb-12">
-        <div class="text-7xl mb-4 animate-float">🚀</div>
-        <h1 class="text-6xl md:text-7xl font-bold text-accent drop-shadow-lg mb-4">
-          AstroMath
-        </h1>
-        <p class="text-xl md:text-2xl text-blue-200 max-w-2xl leading-relaxed">
+      <section class="animate-fade-in mb-12 flex flex-col items-center">
+        <div class="mb-4 animate-float flex justify-center">
+          <img src="/astro-math-logo.png" alt="AstroMath Logo" class="h-40 md:h-56 object-contain rounded-3xl border-2 border-yellow-400 shadow-[0_0_35px_rgba(250,204,21,0.5)] transition duration-500 hover:shadow-[0_0_50px_rgba(250,204,21,0.8)]" />
+        </div>
+        <h1 class="sr-only">AstroMath</h1>
+        <p class="text-xl md:text-2xl text-blue-200 max-w-2xl leading-relaxed mt-2 mx-auto">
           Una aventura espacial donde aprender las tablas de multiplicar
           es tan emocionante como explorar las estrellas.
         </p>
@@ -74,7 +74,7 @@ import { SoundService } from '../../core/services/sound.service';
       </p>
     </div>
   `,
-   styles: `
+  styles: `
     @keyframes fade-in {
       from { opacity: 0; transform: translateY(-10px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -112,14 +112,14 @@ import { SoundService } from '../../core/services/sound.service';
       transform: translateY(-4px);
     }
   `,
-   changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WelcomeComponent {
-   private router = inject(Router);
-   private sound = inject(SoundService);
+  private router = inject(Router);
+  private sound = inject(SoundService);
 
-   goToLogin(): void {
-      this.sound.play('click');
-      this.router.navigate(['/login']);
-   }
+  goToLogin(): void {
+    this.sound.play('click');
+    this.router.navigate(['/login']);
+  }
 }

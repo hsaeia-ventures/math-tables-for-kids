@@ -39,7 +39,7 @@ import { StarBackgroundComponent } from '../../shared/components/star-background
         @if (currentQuestion(); as q) {
           <div class="w-full max-w-2xl bg-white/10 backdrop-blur-md rounded-[3rem] p-12 text-center border-4 border-white/10 shadow-2xl relative overflow-hidden">
             <h2 class="text-2xl text-blue-200 uppercase tracking-[0.3em] mb-6 font-bold">Pregunta {{ currentIndex() + 1 }} de 10</h2>
-            <div class="text-7xl font-bold mb-12 text-white drop-shadow-md">
+            <div class="text-7xl font-bold mb-12 text-white drop-shadow-md" translate="no">
               {{ q.text }}
             </div>
 
@@ -52,7 +52,7 @@ import { StarBackgroundComponent } from '../../shared/components/star-background
                   {{ feedback() === 'correct' ? '🌟 ¡GENIAL!' : '☄️ ¡UPS!' }}
                 </div>
                 <div class="text-2xl text-white mb-8">
-                  {{ feedback() === 'correct' ? '¡Cálculo perfecto, Comandante!' : 'La respuesta correcta era ' + q.answer }}
+                  {{ feedback() === 'correct' ? '¡Cálculo perfecto, Comandante!' : 'La respuesta correcta era ' }}<span translate="no">{{ feedback() !== 'correct' ? q.answer : '' }}</span>
                 </div>
                 <button
                   (click)="nextQuestion()"
@@ -70,6 +70,7 @@ import { StarBackgroundComponent } from '../../shared/components/star-background
                     (click)="checkAnswer(opt)"
                     [disabled]="!!feedback()"
                     class="juicy-button py-8 text-4xl font-bold rounded-3xl bg-white/10 border-4 border-white/5 hover:border-accent hover:bg-accent/20 transition-all text-white active:bg-accent active:text-primary"
+                    translate="no"
                   >
                     {{ opt }}
                   </button>

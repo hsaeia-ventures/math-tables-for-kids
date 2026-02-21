@@ -82,3 +82,6 @@ src/
 
 **4. Retroalimentación Inmediata con Refuerzo Positivo:**
 - Expresa corrección en vivo y en directo en plena partida: Al equivocarse el pequeño astronauta, el sistema proyecta con un refuerzo audio-visual la respuesta correcta antes de darle pase libre al siguiente cuestionamiento; garantizando de esta forma contundente la interiorización y corrección natural e inmediata de la materia.
+
+## Link Slides
+https://docs.google.com/presentation/d/1ISdASPvu4X8jIqmTiwB7uOgqucItdpmTpxpwauufotw/edit?slide=id.g39428a8267a_2_63#slide=id.g39428a8267a_2_63

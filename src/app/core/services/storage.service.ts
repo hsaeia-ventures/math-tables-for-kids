@@ -70,6 +70,8 @@ export class StorageService {
         basicCompleted: false,
         advancedCompleted: false,
         stars: 0,
+        trainingCompleted: false,
+        failedMultipliers: [],
       })),
     };
 
@@ -136,6 +138,43 @@ export class StorageService {
           delay(300)
         );
       }
+    }
+
+    return of(undefined);
+  }
+
+  updateTrainingProgress(
+    tableId: number,
+    completed: boolean,
+    failedMultipliers: number[]
+  ): Observable<void> {
+    const user = this.auth.currentUser();
+    const profile = this.activeProfile();
+    if (!user || !profile) return of(undefined);
+
+    const updatedProfile = { ...profile };
+    updatedProfile.progress = profile.progress.map(p => ({ ...p }));
+
+    const progressIndex = updatedProfile.progress.findIndex(p => p.tableId === tableId);
+
+    if (progressIndex > -1) {
+      updatedProfile.progress[progressIndex].trainingCompleted = completed;
+      updatedProfile.progress[progressIndex].failedMultipliers = failedMultipliers;
+
+      const profileRef = doc(this.firestore, `users/${user.uid}/profiles/${profile.id}`);
+
+      this.activeProfile.set(updatedProfile);
+
+      return from(updateDoc(profileRef, {
+        progress: updatedProfile.progress
+      })).pipe(
+        delay(300),
+        catchError((error) => {
+          console.error('StorageService: Error updating training progress:', error);
+          this.notify.show('Error al guardar el progreso del entrenamiento.', 'error');
+          return throwError(() => error);
+        })
+      );
     }
 
     return of(undefined);

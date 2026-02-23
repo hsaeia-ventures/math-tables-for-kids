@@ -12,13 +12,8 @@ export interface TableProgress {
   basicCompleted: boolean;
   advancedCompleted: boolean;
   stars: number;
-}
-
-export interface TableProgress {
-  tableId: number;
-  basicCompleted: boolean;
-  advancedCompleted: boolean;
-  stars: number;
+  trainingCompleted?: boolean;
+  failedMultipliers?: number[];
 }
 
 export interface GameQuestion {
@@ -33,3 +28,13 @@ export interface GameResult {
   totalQuestions: number;
   starsEarned: number;
 }
+
+export interface TrainingStep {
+  multiplier: number;
+  operation: string;
+  correctAnswer: number;
+  options: [number, number];
+  hint: string;
+}
+
+export type TrainingPhase = 'observe' | 'quiz' | 'feedback' | 'hint';

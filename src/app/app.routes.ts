@@ -22,6 +22,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
   },
   {
+    path: 'training/:tableId',
+    canActivate: [authGuard, profileGuard],
+    loadComponent: () => import('./features/training/training.component').then(m => m.TrainingComponent)
+  },
+  {
     path: 'exercise/:tableId',
     canActivate: [authGuard, profileGuard],
     loadComponent: () => import('./features/game/game.component').then(m => m.GameComponent)

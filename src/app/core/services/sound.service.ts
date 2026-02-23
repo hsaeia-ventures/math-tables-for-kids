@@ -12,6 +12,8 @@ export class SoundService {
     this.loadSound('success', 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3');
     this.loadSound('failure', 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
     this.loadSound('complete', 'https://assets.mixkit.co/active_storage/sfx/2020/2020-preview.mp3');
+    this.loadSound('hint', 'https://assets.mixkit.co/active_storage/sfx/2569/2569-preview.mp3');
+    this.loadSound('training_complete', 'https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3');
   }
 
   private loadSound(key: string, url: string): void {
@@ -24,7 +26,7 @@ export class SoundService {
     );
   }
 
-  play(key: 'click' | 'success' | 'failure' | 'complete'): void {
+  play(key: 'click' | 'success' | 'failure' | 'complete' | 'hint' | 'training_complete'): void {
     const sound = this.sounds.get(key);
     if (sound) {
       sound.play();

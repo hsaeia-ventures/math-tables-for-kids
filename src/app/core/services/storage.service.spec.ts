@@ -3,7 +3,7 @@ import { StorageService } from './storage.service';
 import { AuthService } from './auth.service';
 import { NotificationService } from './notification.service';
 import {
-   Firestore, collection, collectionData, doc, setDoc
+   Firestore, collection, collectionData, doc, setDoc, updateDoc
 } from '@angular/fire/firestore';
 import { Observable, of, delay, from, firstValueFrom } from 'rxjs';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
@@ -76,6 +76,8 @@ describe('StorageService', () => {
             expect(p.basicCompleted).toBe(false);
             expect(p.advancedCompleted).toBe(false);
             expect(p.stars).toBe(0);
+            expect(p.trainingCompleted).toBe(false);
+            expect(p.failedMultipliers).toEqual([]);
          });
       });
 
@@ -160,6 +162,72 @@ describe('StorageService', () => {
          expect(service.profiles()).toEqual([]);
          expect(service.activeProfile()).toBeNull();
          expect(service.loadingProfiles()).toBe(false);
+      });
+   });
+
+   describe('updateTrainingProgress', () => {
+      const profileWithProgress: Profile = {
+         id: 'p1',
+         name: 'Luna',
+         age: 8,
+         avatar: '🚀',
+         totalStars: 0,
+         progress: Array.from({ length: 10 }, (_, i) => ({
+            tableId: i + 1,
+            basicCompleted: false,
+            advancedCompleted: false,
+            stars: 0,
+            trainingCompleted: false,
+            failedMultipliers: [] as number[],
+         })),
+      };
+
+      it('should update the local profile with training completed', async () => {
+         currentUserSignal.set(fakeUser);
+         service.activeProfile.set({ ...profileWithProgress });
+         const mockDocRef = { type: 'doc' };
+         (doc as any).mockReturnValue(mockDocRef);
+         (updateDoc as any).mockResolvedValue(undefined);
+
+         service.updateTrainingProgress(3, true, [5, 8]).subscribe();
+
+         const updated = service.activeProfile();
+         const table3 = updated?.progress.find(p => p.tableId === 3);
+         expect(table3?.trainingCompleted).toBe(true);
+         expect(table3?.failedMultipliers).toEqual([5, 8]);
+      });
+
+      it('should call updateDoc with the correct Firestore data', () => {
+         currentUserSignal.set(fakeUser);
+         service.activeProfile.set({ ...profileWithProgress, progress: profileWithProgress.progress.map(p => ({ ...p })) });
+         const mockDocRef = { type: 'doc' };
+         (doc as any).mockReturnValue(mockDocRef);
+         (updateDoc as any).mockResolvedValue(undefined);
+
+         service.updateTrainingProgress(1, true, []).subscribe();
+
+         expect(doc).toHaveBeenCalledWith({}, 'users/user-123/profiles/p1');
+         expect(updateDoc).toHaveBeenCalledWith(mockDocRef, expect.objectContaining({
+            progress: expect.any(Array),
+         }));
+      });
+
+      it('should return of(undefined) if no user is logged in', () => {
+         currentUserSignal.set(null);
+         service.activeProfile.set(profileWithProgress);
+
+         let result: any;
+         service.updateTrainingProgress(1, true, []).subscribe(v => result = v);
+         expect(result).toBeUndefined();
+      });
+
+      it('should return of(undefined) if no active profile', () => {
+         currentUserSignal.set(fakeUser);
+         service.activeProfile.set(null);
+
+         let result: any;
+         service.updateTrainingProgress(1, true, []).subscribe(v => result = v);
+         expect(result).toBeUndefined();
       });
    });
 });

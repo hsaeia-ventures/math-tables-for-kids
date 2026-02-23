@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { LucideAngularModule, Lock, Star, LogOut } from 'lucide-angular';
@@ -6,10 +6,21 @@ import { StorageService } from '../../core/services/storage.service';
 import { AuthService } from '../../core/services/auth.service';
 import { SoundService } from '../../core/services/sound.service';
 import { StarBackgroundComponent } from '../../shared/components/star-background.component';
+import { PlanetMenuModalComponent } from '../../shared/components/planet-menu-modal.component';
+
+interface PlanetData {
+  tableId: number;
+  basicCompleted: boolean;
+  advancedCompleted: boolean;
+  stars: number;
+  trainingCompleted?: boolean;
+  color: string;
+  emoji: string;
+}
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, LucideAngularModule, StarBackgroundComponent],
+  imports: [CommonModule, LucideAngularModule, StarBackgroundComponent, PlanetMenuModalComponent],
   template: `
     <app-star-background />
     <div class="min-h-screen p-6 max-w-7xl mx-auto">
@@ -37,8 +48,9 @@ import { StarBackgroundComponent } from '../../shared/components/star-background
         @for (planet of planets(); track planet.tableId) {
           <div class="relative group">
             <button
-              (click)="goToGame(planet.tableId)"
+              (click)="openPlanetMenu(planet)"
               class="juicy-button w-full flex flex-col items-center gap-4 p-6 rounded-[2.5rem] bg-white/5 border-2 border-white/10 hover:border-accent hover:bg-white/10 transition-all"
+              [attr.id]="'planet-btn-' + planet.tableId"
             >
               <div
                 class="w-24 h-24 rounded-full flex items-center justify-center text-4xl shadow-xl relative animate-float transition-transform group-hover:scale-110"
@@ -50,11 +62,16 @@ import { StarBackgroundComponent } from '../../shared/components/star-background
                     ★ {{ planet.stars }}
                   </div>
                 }
+                @if (planet.trainingCompleted) {
+                  <div class="absolute -bottom-1 -left-1 bg-indigo-500 text-white w-7 h-7 rounded-full text-sm font-bold flex items-center justify-center border-2 border-primary shadow-md training-badge">
+                    🎯
+                  </div>
+                }
               </div>
               <div class="text-center">
                 <h3 class="text-xl font-bold">Tabla {{ planet.tableId }}</h3>
                 <p class="text-xs text-blue-200 uppercase tracking-widest mt-1">
-                  {{ planet.basicCompleted ? (planet.advancedCompleted ? 'Dominada' : 'Avanzado') : 'Entrenando' }}
+                  {{ getPlanetStatus(planet) }}
                 </p>
               </div>
             </button>
@@ -68,6 +85,20 @@ import { StarBackgroundComponent } from '../../shared/components/star-background
         }
       </div>
     </div>
+
+    <!-- Planet Menu Modal -->
+    @if (showPlanetMenu() && selectedPlanet(); as planet) {
+      <app-planet-menu-modal
+        [tableId]="planet.tableId"
+        [tableName]="'Tabla ' + planet.tableId"
+        [planetEmoji]="planet.emoji"
+        [planetColor]="planet.color"
+        [trainingCompleted]="planet.trainingCompleted ?? false"
+        [isOpen]="showPlanetMenu()"
+        (selectMode)="onSelectMode($event)"
+        (closeModal)="closePlanetMenu()"
+      />
+    }
   `,
   styleUrl: './dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -83,6 +114,9 @@ export class DashboardComponent {
   readonly LogOut = LogOut;
 
   activeProfile = this.storage.activeProfile;
+
+  showPlanetMenu = signal(false);
+  selectedPlanet = signal<PlanetData | null>(null);
 
   planets = computed(() => {
     const profile = this.activeProfile();
@@ -116,10 +150,35 @@ export class DashboardComponent {
     return prev?.basicCompleted ?? false;
   }
 
-  goToGame(tableId: number): void {
-    if (tableId > 1 && !this.isPreviousCompleted(tableId)) return;
+  getPlanetStatus(planet: PlanetData): string {
+    if (planet.basicCompleted && planet.advancedCompleted) return 'Dominada';
+    if (planet.basicCompleted) return 'Avanzado';
+    if (planet.trainingCompleted) return 'Entrenada';
+    return 'Sin explorar';
+  }
+
+  openPlanetMenu(planet: PlanetData): void {
+    if (planet.tableId > 1 && !this.isPreviousCompleted(planet.tableId)) return;
     this.sound.play('click');
-    this.router.navigate(['/exercise', tableId]);
+    this.selectedPlanet.set(planet);
+    this.showPlanetMenu.set(true);
+  }
+
+  onSelectMode(mode: 'training' | 'mission'): void {
+    const planet = this.selectedPlanet();
+    if (!planet) return;
+    this.sound.play('click');
+    this.showPlanetMenu.set(false);
+    if (mode === 'training') {
+      this.router.navigate(['/training', planet.tableId]);
+    } else {
+      this.router.navigate(['/exercise', planet.tableId]);
+    }
+  }
+
+  closePlanetMenu(): void {
+    this.showPlanetMenu.set(false);
+    this.selectedPlanet.set(null);
   }
 
   async logout(): Promise<void> {
@@ -128,3 +187,4 @@ export class DashboardComponent {
     this.router.navigate(['/login']);
   }
 }
+

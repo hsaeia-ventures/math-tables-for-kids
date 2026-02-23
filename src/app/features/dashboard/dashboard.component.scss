@@ -19,3 +19,21 @@
       animation-delay: #{$i * 0.2}s;
    }
 }
+
+/* Training completed badge */
+@keyframes badge-pulse {
+
+   0%,
+   100% {
+      box-shadow: 0 0 4px rgba(99, 102, 241, 0.3);
+   }
+
+   50% {
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
+   }
+}
+
+.training-badge {
+   animation: badge-pulse 2s infinite ease-in-out;
+   font-size: 0.75rem;
+}
